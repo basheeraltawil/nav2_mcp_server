@@ -1,51 +1,39 @@
-FROM ghcr.io/alpine-ros/alpine-ros:jazzy-3.20-ros-core
+FROM ros:humble-ros-base
 
-# ROS 2 environment variables
-ENV ROS_DISTRO=jazzy
+# ROS 2 environment variables. ROS_LOCALHOST_ONLY defaults to 0 so the
+# container can discover a TIAGo on another host (use --network host).
+ENV ROS_DISTRO=humble
 ENV ROS_DOMAIN_ID=0
-ENV ROS_LOCALHOST_ONLY=1
+ENV ROS_LOCALHOST_ONLY=0
 ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-ENV CYCLONEDDS_URI=''
 
-# Install necessary ROS2 packages
-RUN apk add --no-cache \
-    py3-pip \
-    ros-${ROS_DISTRO}-rmw-fastrtps-cpp \
-    ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
-    ros-${ROS_DISTRO}-rosidl-generator-py \
-    ros-${ROS_DISTRO}-rosidl-typesupport-c \
-    ros-${ROS_DISTRO}-rosidl-typesupport-fastrtps-c \
-    ros-${ROS_DISTRO}-rosidl-typesupport-fastrtps-cpp \
-    ros-${ROS_DISTRO}-geometry-msgs \
-    ros-${ROS_DISTRO}-lifecycle-msgs \
-    ros-${ROS_DISTRO}-nav-msgs \
+# TIAGo defaults (override at `docker run` with -e if your robot differs).
+ENV MAP_FRAME=map
+ENV BASE_FRAME=base_footprint
+# opennav_docking is Jazzy+, so keep docking off on Humble.
+ENV ENABLE_DOCKING=0
+
+# Nav2 Python deps come from apt (NOT PyPI): rclpy, nav2_simple_commander,
+# tf2_ros, and the message packages are all provided by the ROS install.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-pip \
+    ros-${ROS_DISTRO}-nav2-simple-commander \
     ros-${ROS_DISTRO}-nav2-msgs \
     ros-${ROS_DISTRO}-tf2-ros-py \
-    ros-${ROS_DISTRO}-nav2-simple-commander \
+    ros-${ROS_DISTRO}-geometry-msgs \
+    ros-${ROS_DISTRO}-nav-msgs \
+    ros-${ROS_DISTRO}-lifecycle-msgs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv using pip
-RUN pip3 install --no-cache-dir --break-system-packages uv
-
-# Set working directory
 WORKDIR /app
 
-# Copy dependency files first for better Docker layer caching
-COPY pyproject.toml .
-COPY uv.lock* .
-
-# Create a src folder
-RUN mkdir -p src
-
-# Install dependencies using uv
-RUN uv sync --frozen --no-dev
-
-# Copy source code
+# Copy metadata + source, then install the package into the system
+# environment so it sits alongside the apt-provided ROS Python packages.
+COPY pyproject.toml README.md ./
 COPY src/ src/
+RUN pip3 install --no-cache-dir .
 
-# Install the package in development mode
-RUN uv sync
-
-# MCP server startup command using uv
+# /ros_entrypoint.sh (provided by the ros base image) sources the ROS
+# environment before exec'ing the command, so rclpy & friends import.
 ENTRYPOINT ["/ros_entrypoint.sh"]
-CMD ["uv", "run", "nav2_mcp_server"]
+CMD ["python3", "-m", "nav2_mcp_server"]

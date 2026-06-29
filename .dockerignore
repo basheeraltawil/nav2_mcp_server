@@ -51,6 +51,9 @@ Thumbs.db
 
 # Documentation
 *.md
+# ...but keep README.md: pyproject.toml references it as the package readme,
+# so the pip build inside the image needs it present in the build context.
+!README.md
 docs/
 
 # Tests

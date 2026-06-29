@@ -16,7 +16,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.12]
+        python-version: ["3.10"]
     steps:
       - uses: actions/checkout@v4.2.2
       - name: Install uv
@@ -35,19 +35,19 @@ jobs:
 
   type:
     runs-on: ubuntu-latest
-    container: ros:jazzy-ros-base-noble
+    container: ros:humble-ros-base
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.12]
+        python-version: ["3.10"]
     steps:
       - uses: actions/checkout@v4.2.2
         with: {path: src/nav2_mcp_server}
       - name: Install dependencies
         run: |
           apt update
-          rosdep update --rosdistro jazzy
-          rosdep install --rosdistro jazzy --from-paths src --ignore-src -r -y
+          rosdep update --rosdistro humble
+          rosdep install --rosdistro humble --from-paths src --ignore-src -r -y
       - name: Install uv
         uses: astral-sh/setup-uv@v5.3.0
         with:
@@ -60,24 +60,24 @@ jobs:
         shell: bash
         working-directory: src/nav2_mcp_server
         run: |
-          source /opt/ros/jazzy/setup.bash
+          source /opt/ros/humble/setup.bash
           uv run mypy src/ tests/
 
   test:
     runs-on: ubuntu-latest
-    container: ros:jazzy-ros-base-noble
+    container: ros:humble-ros-base
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.12]
+        python-version: ["3.10"]
     steps:
       - uses: actions/checkout@v4.2.2
         with: {path: src/nav2_mcp_server}
       - name: Install dependencies
         run: |
           apt update
-          rosdep update --rosdistro jazzy
-          rosdep install --rosdistro jazzy --from-paths src --ignore-src -r -y
+          rosdep update --rosdistro humble
+          rosdep install --rosdistro humble --from-paths src --ignore-src -r -y
       - name: Install uv
         uses: astral-sh/setup-uv@v5.3.0
         with:
@@ -90,7 +90,7 @@ jobs:
         shell: bash
         working-directory: src/nav2_mcp_server
         run: |
-          source /opt/ros/jazzy/setup.bash
+          source /opt/ros/humble/setup.bash
           uv run pytest tests/ -v --cov=nav2_mcp_server --cov-report=xml --cov-report=term
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5.3.1
@@ -102,12 +102,12 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    container: ros:jazzy-ros-base-noble
+    container: ros:humble-ros-base
     needs: [linter, type, test]
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.12]
+        python-version: ["3.10"]
 
     steps:
       - uses: actions/checkout@v4.2.2

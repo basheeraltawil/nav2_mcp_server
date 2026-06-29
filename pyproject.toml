@@ -10,13 +10,15 @@ authors = [
 ]
 description = "MCP server wrapping Nav2 action clients"
 readme = "README.md"
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.10"
 dependencies = [
     "anyio",
     "empy>=4.2",
     "fastmcp>=2.12.3",
     "lark>=1.3.0",
-    "numpy>=2.3.0",
+    # numpy<2.3 keeps Python 3.10 (ROS 2 Humble / Ubuntu 22.04) supported;
+    # numpy 2.3+ requires Python 3.11+.
+    "numpy>=1.24",
     "python-dotenv>=1.0.1",
 ]
 
@@ -62,7 +64,7 @@ order_by_type = false
 group_by_package = false
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -100,4 +102,4 @@ exclude_lines = [
 ]
 
 [tool.tox]
-env_list = ["3.12"]
+env_list = ["3.10"]

@@ -34,9 +34,18 @@ class NavigationConfig:
     default_tf_timeout: float = 0.5
     feedback_update_interval: int = 5
 
-    # Frame names
+    # Frame names. Defaults target PAL Robotics TIAGo on ROS 2 Humble,
+    # whose mobile base publishes ``base_footprint``. Override with the
+    # MAP_FRAME / BASE_FRAME environment variables for other robots.
     map_frame: str = 'map'
-    base_link_frame: str = 'base_link'
+    base_link_frame: str = 'base_footprint'
+
+    # Whether the Nav2 docking tools (dock_robot/undock_robot) may run.
+    # opennav_docking only exists on ROS 2 Jazzy and newer, so on Humble
+    # the docking actions are absent; the tools auto-detect this and return
+    # a FEATURE_NOT_SUPPORTED error rather than crashing. Set ENABLE_DOCKING=0
+    # to additionally hard-disable them.
+    enable_docking: bool = True
 
     # Navigation limits
     max_waypoints: int = 100
@@ -121,6 +130,20 @@ class Config:
                 self.logging.level = getattr(logging, log_level.upper())
             except AttributeError:
                 pass
+
+        # TF frame overrides (robot-specific). TIAGo defaults are set on
+        # NavigationConfig; these let other robots override without code edits.
+        if map_frame := os.getenv('MAP_FRAME'):
+            self.navigation.map_frame = map_frame
+
+        if base_frame := os.getenv('BASE_FRAME'):
+            self.navigation.base_link_frame = base_frame
+
+        # Docking toggle. Any of 0/false/no/off (case-insensitive) disables it.
+        if (enable_docking := os.getenv('ENABLE_DOCKING')) is not None:
+            self.navigation.enable_docking = (
+                enable_docking.strip().lower() not in ('0', 'false', 'no', 'off', '')
+            )
 
     def _apply_overrides(self, config_dict: Dict[str, Any]) -> None:
         """Apply configuration overrides from dictionary.

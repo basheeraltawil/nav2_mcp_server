@@ -34,6 +34,7 @@ class NavigationErrorCode(Enum):
     INVALID_PARAMETERS = 6
     TIMEOUT = 7
     ROS_ERROR = 8
+    FEATURE_NOT_SUPPORTED = 9
 
 
 class Nav2MCPError(Exception):

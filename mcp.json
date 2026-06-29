@@ -7,8 +7,16 @@
                 "run",
                 "-i",
                 "--rm",
+                "--network",
+                "host",
                 "-e",
                 "ROS_DOMAIN_ID=YOUR_ROS_DOMAIN_ID",
+                "-e",
+                "ROS_LOCALHOST_ONLY=0",
+                "-e",
+                "BASE_FRAME=base_footprint",
+                "-e",
+                "ENABLE_DOCKING=0",
                 "nav2_mcp_server"
             ]
         }

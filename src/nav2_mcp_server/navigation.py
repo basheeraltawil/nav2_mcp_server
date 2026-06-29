@@ -707,6 +707,8 @@ class NavigationManager:
         if dock_pose is None and not dock_id:
             raise ValueError('Either dock_pose or dock_id must be provided')
 
+        self._check_docking_available()
+
         if dock_pose is not None:
             # Dock using pose
             self.navigator.get_logger().info(
@@ -774,6 +776,8 @@ class NavigationManager:
         NavigationError
             If undocking operation fails.
         """
+        self._check_docking_available()
+
         self.navigator.get_logger().info('Undocking robot from dock')
         if context_manager:
             context_manager.info_sync('Starting undock operation')
@@ -797,6 +801,36 @@ class NavigationManager:
         if self._navigator:
             self._navigator.destroy_node()
             self._navigator = None
+
+    def _check_docking_available(self) -> None:
+        """Fail cleanly if Nav2 docking is unavailable on this system.
+
+        opennav_docking (the action behind dock_robot/undock_robot) only
+        ships with ROS 2 Jazzy and newer. On Humble — e.g. TIAGo — the
+        BasicNavigator has no ``docking_client``/``undocking_client`` and the
+        action servers are absent, so a dock call would otherwise raise an
+        opaque AttributeError or hang. This raises FEATURE_NOT_SUPPORTED so
+        the LLM front-end gets an actionable message instead.
+
+        It also honours the ENABLE_DOCKING toggle: setting it false
+        hard-disables docking even on a Jazzy+ system.
+        """
+        if not self.config.navigation.enable_docking:
+            raise NavigationError(
+                'Docking is disabled (ENABLE_DOCKING is off). '
+                'Set ENABLE_DOCKING=1 to enable it on ROS 2 Jazzy or newer.',
+                NavigationErrorCode.FEATURE_NOT_SUPPORTED,
+                {'enable_docking': False},
+            )
+
+        if not hasattr(self.navigator, 'docking_client'):
+            raise NavigationError(
+                'Nav2 docking action is not available in this ROS 2 '
+                'distribution. opennav_docking requires ROS 2 Jazzy or newer; '
+                'it is not part of Humble (e.g. TIAGo).',
+                NavigationErrorCode.FEATURE_NOT_SUPPORTED,
+                {'required': 'opennav_docking (ROS 2 Jazzy+)'},
+            )
 
     def _ensure_action_server(
         self, client: Any, action_name: str, timeout: float = 5.0

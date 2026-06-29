@@ -8,12 +8,15 @@ kinds of LLM front-end:
 2. **GitHub Copilot** — VS Code agent mode (MCP)
 3. **Offline / local LLMs** — Llama (and friends) via Ollama
 
-> TL;DR of the Humble adaptation already baked into this repo:
+> TL;DR of the Humble adaptation baked into this repo:
 > - Default robot base frame is `base_footprint` (TIAGo), overridable with `BASE_FRAME`.
+> - Default map frame is `map`, overridable with `MAP_FRAME`.
 > - Python floor lowered to **3.10** (Humble ships on Ubuntu 22.04 / Python 3.10).
 > - The `Dockerfile` is based on `ros:humble-ros-base`.
-> - Nav2 **docking** (`dock_robot`/`undock_robot`) is **disabled by default** because
->   `opennav_docking` only exists on ROS 2 Jazzy+. Everything else works on Humble.
+> - Nav2 **docking** (`dock_robot`/`undock_robot`) is **auto-detected**: `opennav_docking`
+>   only exists on ROS 2 Jazzy+, so on Humble the dock tools return a clear
+>   `FEATURE_NOT_SUPPORTED` error instead of crashing. Set `ENABLE_DOCKING=0` to
+>   hard-disable them entirely. Everything else works on Humble.
 
 ---
 
@@ -263,10 +266,13 @@ All tools work on Humble **except** docking, gated behind `ENABLE_DOCKING`:
 | `navigate_to_pose`, `follow_waypoints`, `spin_robot`, `backup_robot`, `drive_on_heading`, `approach_target` | ✅ | core navigation/behaviors |
 | `get_path`, `get_path_from_robot` | ✅ | planner queries |
 | `clear_costmaps`, `get_robot_pose`, `cancel_navigation`, `nav2_lifecycle` | ✅ | status / lifecycle |
-| `dock_robot`, `undock_robot` | ⛔ (default) | requires `opennav_docking` (ROS 2 Jazzy+); set `ENABLE_DOCKING=1` only on Jazzy+ |
+| `dock_robot`, `undock_robot` | ⚠️ auto-detected | requires `opennav_docking` (ROS 2 Jazzy+). On Humble they return `FEATURE_NOT_SUPPORTED` |
 
-If `ENABLE_DOCKING=1` is set on Humble, the docking tools register but return a clear
-`FEATURE_NOT_SUPPORTED` error at call time rather than crashing.
+The docking tools are always registered (so they show up in the client) but the
+server auto-detects whether the running Nav2 actually provides the docking action.
+On Humble (TIAGo) it does not, so a call returns a clear `FEATURE_NOT_SUPPORTED`
+error at call time rather than crashing or hanging. Setting `ENABLE_DOCKING=0`
+disables them everywhere, including on Jazzy+.
 
 ---
 

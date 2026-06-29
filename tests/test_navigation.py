@@ -1495,3 +1495,89 @@ class TestEnsureActionServer:
             NavigationErrorCode.NAV2_NOT_ACTIVE
         )
         client.wait_for_server.assert_called_once_with(timeout_sec=0.5)
+
+
+class TestDockingAvailability:
+    """Tests for the docking-availability gate (Humble/Jazzy difference)."""
+
+    @patch('nav2_mcp_server.navigation.BasicNavigator')
+    def test_dock_robot_disabled_via_flag(
+        self, mock_navigator_class: Mock
+    ) -> None:
+        """dock_robot raises FEATURE_NOT_SUPPORTED when docking is disabled.
+
+        With ENABLE_DOCKING off (here via a config override), docking must
+        be refused even when the navigator advertises a docking client.
+        """
+        from nav2_mcp_server.config import Config
+        from nav2_mcp_server.exceptions import NavigationErrorCode
+
+        mock_navigator = Mock()
+        mock_navigator_class.return_value = mock_navigator
+
+        nav_manager = NavigationManager()
+        nav_manager.config = Config({'navigation': {'enable_docking': False}})
+        context_manager = MCPContextManager()
+
+        with pytest.raises(NavigationError) as exc_info:
+            nav_manager.dock_robot(
+                dock_id='charging_dock_1',
+                context_manager=context_manager
+            )
+
+        assert exc_info.value.error_code == (
+            NavigationErrorCode.FEATURE_NOT_SUPPORTED
+        )
+
+    @patch('nav2_mcp_server.navigation.BasicNavigator')
+    def test_dock_robot_unsupported_on_humble(
+        self, mock_navigator_class: Mock
+    ) -> None:
+        """dock_robot raises FEATURE_NOT_SUPPORTED when no docking action.
+
+        On Humble the BasicNavigator has no ``docking_client``; the gate must
+        detect its absence and refuse rather than raising an opaque error.
+        """
+        from nav2_mcp_server.exceptions import NavigationErrorCode
+
+        mock_navigator = Mock()
+        # Simulate a Humble BasicNavigator: no docking client attribute.
+        del mock_navigator.docking_client
+        mock_navigator_class.return_value = mock_navigator
+
+        nav_manager = NavigationManager()
+        context_manager = MCPContextManager()
+
+        with pytest.raises(NavigationError) as exc_info:
+            nav_manager.dock_robot(
+                dock_id='charging_dock_1',
+                context_manager=context_manager
+            )
+
+        assert exc_info.value.error_code == (
+            NavigationErrorCode.FEATURE_NOT_SUPPORTED
+        )
+
+    @patch('nav2_mcp_server.navigation.BasicNavigator')
+    def test_undock_robot_unsupported_on_humble(
+        self, mock_navigator_class: Mock
+    ) -> None:
+        """undock_robot raises FEATURE_NOT_SUPPORTED when no docking action."""
+        from nav2_mcp_server.exceptions import NavigationErrorCode
+
+        mock_navigator = Mock()
+        del mock_navigator.docking_client
+        mock_navigator_class.return_value = mock_navigator
+
+        nav_manager = NavigationManager()
+        context_manager = MCPContextManager()
+
+        with pytest.raises(NavigationError) as exc_info:
+            nav_manager.undock_robot(
+                dock_type='',
+                context_manager=context_manager
+            )
+
+        assert exc_info.value.error_code == (
+            NavigationErrorCode.FEATURE_NOT_SUPPORTED
+        )

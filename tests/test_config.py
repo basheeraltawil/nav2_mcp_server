@@ -128,6 +128,48 @@ class TestEnvironmentVariables:
         config = Config()
         assert config.logging.level == logging.INFO  # Default value
 
+    @patch.dict(os.environ, {'BASE_FRAME': 'base_link'}, clear=True)
+    def test_base_frame_environment_variable(self) -> None:
+        """Test base frame override from environment variable."""
+        config = Config()
+        assert config.navigation.base_link_frame == 'base_link'
+
+    @patch.dict(os.environ, {'MAP_FRAME': 'world'}, clear=True)
+    def test_map_frame_environment_variable(self) -> None:
+        """Test map frame override from environment variable."""
+        config = Config()
+        assert config.navigation.map_frame == 'world'
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_default_base_frame_is_tiago(self) -> None:
+        """Test that the default base frame targets TIAGo (base_footprint)."""
+        config = Config()
+        assert config.navigation.base_link_frame == 'base_footprint'
+
+    @patch.dict(os.environ, {'ENABLE_DOCKING': '0'}, clear=True)
+    def test_enable_docking_disabled_environment_variable(self) -> None:
+        """Test docking disabled via environment variable."""
+        config = Config()
+        assert config.navigation.enable_docking is False
+
+    @patch.dict(os.environ, {'ENABLE_DOCKING': 'off'}, clear=True)
+    def test_enable_docking_off_environment_variable(self) -> None:
+        """Test docking disabled with a non-numeric falsey value."""
+        config = Config()
+        assert config.navigation.enable_docking is False
+
+    @patch.dict(os.environ, {'ENABLE_DOCKING': '1'}, clear=True)
+    def test_enable_docking_enabled_environment_variable(self) -> None:
+        """Test docking explicitly enabled via environment variable."""
+        config = Config()
+        assert config.navigation.enable_docking is True
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_enable_docking_default(self) -> None:
+        """Test that docking is enabled by default (auto-detected at runtime)."""
+        config = Config()
+        assert config.navigation.enable_docking is True
+
 
 class TestConfigValidation:
     """Tests for configuration validation."""

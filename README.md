@@ -1,6 +1,6 @@
 # Nav2 MCP Server
 
-![ROS2](https://img.shields.io/badge/ros2-jazzy-blue?logo=ros&logoColor=white)
+![ROS2](https://img.shields.io/badge/ros2-humble%20%7C%20jazzy-blue?logo=ros&logoColor=white)
 ![License](https://img.shields.io/github/license/ajtudela/nav2_mcp_server)
 [![Build](https://github.com/ajtudela/nav2_mcp_server/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/ajtudela/nav2_mcp_server/actions/workflows/python-package.yml)
 [![Docker image](https://github.com/ajtudela/nav2_mcp_server/actions/workflows/docker_image.yml/badge.svg?branch=main)](https://github.com/ajtudela/nav2_mcp_server/actions/workflows/docker_image.yml)
@@ -9,6 +9,12 @@
 [![codecov](https://codecov.io/gh/ajtudela/nav2_mcp_server/graph/badge.svg?token=munojKDLxe)](https://codecov.io/gh/ajtudela/nav2_mcp_server)
 
 An MCP (Model Context Protocol) server that provides tools and resources to control and monitor Nav2 navigation operations, allowing seamless integration with Nav2-enabled robots through the MCP protocol.
+
+> **Running a PAL Robotics TIAGo on ROS 2 Humble?** See the step-by-step guide:
+> [docs/TIAGO_HUMBLE_SETUP.md](docs/TIAGO_HUMBLE_SETUP.md) — it covers native and
+> Docker installs and connecting Claude/Cursor, GitHub Copilot, and offline LLMs
+> (Llama via Ollama). The defaults in this repo (base frame `base_footprint`,
+> Python 3.10, docking auto-detected) already target Humble/TIAGo.
 
 ![Demo of Nav2 MCP Server](docs/demo.gif)
 
@@ -56,6 +62,9 @@ An MCP (Model Context Protocol) server that provides tools and resources to cont
 | `HTTP_HOST`          | `0.0.0.0` | HTTP host binding (only used when `TRANSPORT_MODE=http`)        |
 | `HTTP_PORT`          | `3001`    | HTTP port (only used when `TRANSPORT_MODE=http`)                |
 | `LOG_LEVEL`          | `INFO`    | Logging level: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`  |
+| `MAP_FRAME`          | `map`     | TF frame of the map (target frame for robot pose)               |
+| `BASE_FRAME`         | `base_footprint` | TF frame of the robot base (TIAGo uses `base_footprint`; many other robots use `base_link`) |
+| `ENABLE_DOCKING`     | `1`       | Set to `0` to disable the docking tools. opennav_docking is ROS 2 Jazzy+; on Humble the dock tools auto-detect this and return `FEATURE_NOT_SUPPORTED` |
 | `ROS_DOMAIN_ID`      | —         | ROS 2 domain ID for network isolation (recommended)             |
 | `ROS_LOCALHOST_ONLY` | —         | Set to '1' to restrict ROS 2 communication to localhost only    |
 
@@ -83,7 +92,7 @@ LOG_LEVEL=INFO
 
 ### Dependencies
 
-- [Robot Operating System (ROS) 2](https://docs.ros.org/en/jazzy/): Middleware for robotics (Jazzy)
+- [Robot Operating System (ROS) 2](https://docs.ros.org/en/humble/): Middleware for robotics (Humble or Jazzy; Humble/TIAGo is the default target — see [docs/TIAGO_HUMBLE_SETUP.md](docs/TIAGO_HUMBLE_SETUP.md))
 - [fastmcp](https://github.com/jlowin/fastmcp): MCP server framework
 - [python](https://www.python.org/): Python programming language
 - [uv](https://github.com/astral-sh/uv): Python package manager (optional)
