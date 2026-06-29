@@ -9,7 +9,7 @@
 [![codecov](https://codecov.io/gh/ajtudela/nav2_mcp_server/graph/badge.svg?token=munojKDLxe)](https://codecov.io/gh/ajtudela/nav2_mcp_server)
 
 An MCP (Model Context Protocol) server that provides tools and resources to control and monitor Nav2 navigation operations, allowing seamless integration with Nav2-enabled robots through the MCP protocol.
-
+n
 ![Demo of Nav2 MCP Server](docs/demo.gif)
 
 ## Features
